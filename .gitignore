@@ -1,0 +1,5 @@
+
+# backend ignores
+backend/.venv/
+backend/venv/
+backend/.env
