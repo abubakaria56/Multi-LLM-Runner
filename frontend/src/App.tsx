@@ -29,6 +29,8 @@ export default function App() {
   const [models, setModels] = useState<string[]>([]);
   const [results, setResults] = useState<ResultsMap>({});
 
+  // refs to each model <details> container (so we can expand/collapse all rows inside)
+  const modelRefs = useRef<Record<string, HTMLDetailsElement | null>>({});
   const abortRef = useRef<AbortController | null>(null);
 
   const hasResults = useMemo(() => Object.keys(results).length > 0, [results]);
@@ -77,8 +79,6 @@ export default function App() {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-
-        // process all complete lines; keep the last partial
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
 
@@ -94,7 +94,6 @@ export default function App() {
           handleEvent(evt);
         }
       }
-      // leftover line if any
       const leftover = buffer.trim();
       if (leftover) {
         try {
@@ -104,9 +103,7 @@ export default function App() {
         }
       }
     } catch (err: any) {
-      if (controller.signal.aborted) {
-        // user cancelled; ignore
-      } else {
+      if (!controller.signal.aborted) {
         setError(err?.message ?? String(err));
       }
     } finally {
@@ -118,7 +115,6 @@ export default function App() {
     if (evt.event === "start") {
       setCountPrompts(evt.count_prompts);
       setModels(evt.models);
-      // initialize empty arrays so tables render immediately
       setResults(Object.fromEntries(evt.models.map((m) => [m, []])));
       return;
     }
@@ -131,27 +127,44 @@ export default function App() {
           error: evt.error,
           prompt_index: evt.prompt_index,
         });
-        // sort by prompt_index so rows remain ordered as they arrive
         arr.sort((a, b) => a.prompt_index - b.prompt_index);
         return { ...prev, [evt.model]: arr };
       });
       return;
     }
-    if (evt.event === "end") {
-      // nothing required; streaming=false will flip when the network closes
-      return;
-    }
+    // evt.event === "end" -> nothing needed
   }
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || streaming) return;
-
-    // cancel any prior stream
-    abortRef.current?.abort();
-
+    abortRef.current?.abort(); // cancel any prior run
     await uploadAndStream(file);
   };
+
+  function truncate(s: string, max = 120) {
+    if (!s) return "";
+    return s.length > max ? s.slice(0, max).trimEnd() + "…" : s;
+  }
+
+  function expandCollapseAllRows(modelName: string, open: boolean) {
+    const details = modelRefs.current[modelName];
+    if (!details) return;
+    const rowDropdowns = details.querySelectorAll("details.row-dropdown");
+    rowDropdowns.forEach((d) => {
+      if (open) (d as HTMLDetailsElement).setAttribute("open", "");
+      else (d as HTMLDetailsElement).removeAttribute("open");
+    });
+  }
+
+  function expandCollapseAllModels(open: boolean) {
+    models.forEach((m) => {
+      const ref = modelRefs.current[m];
+      if (!ref) return;
+      if (open) ref.setAttribute("open", "");
+      else ref.removeAttribute("open");
+    });
+  }
 
   return (
     <div className="app">
@@ -186,14 +199,39 @@ export default function App() {
           </form>
 
           {error && <div className="error">Error: {error}</div>}
-          {countPrompts !== null && (
-            <div className="summary">
-              Planned prompts: <strong>{countPrompts}</strong>
-              {models.length > 0 && (
-                <>
-                  {"  "}• Models: <strong>{models.join(", ")}</strong>
-                </>
-              )}
+
+          {/* Global info + optional model expand/collapse controls */}
+          <div className="summary">
+            {countPrompts !== null && (
+              <>
+                Planned prompts: <strong>{countPrompts}</strong>
+                {models.length > 0 && (
+                  <>
+                    {"  "}• Models: <strong>{models.join(", ")}</strong>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {models.length > 0 && (
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <button
+                type="button"
+                className="btn btn-small"
+                onClick={() => expandCollapseAllModels(true)}
+                title="Expand all models"
+              >
+                Expand all models
+              </button>
+              <button
+                type="button"
+                className="btn btn-small"
+                onClick={() => expandCollapseAllModels(false)}
+                title="Collapse all models"
+              >
+                Collapse all models
+              </button>
             </div>
           )}
         </div>
@@ -203,39 +241,99 @@ export default function App() {
       <main className="content container">
         {hasResults &&
           Object.entries(results).map(([modelName, runs]) => (
-            <section key={modelName} className="model-block">
-              <h2 className="model-name">
-                {modelName}{" "}
-                <span style={{ fontWeight: 400, fontSize: 14, color: "#aaa" }}>
+            <details
+              key={modelName}
+              className="model-dropdown"
+              open
+              ref={(el) => (modelRefs.current[modelName] = el)}
+            >
+              <summary className="model-summary">
+                <span className="caret" aria-hidden>
+                  ▸
+                </span>
+                <span className="model-summary-title">{modelName}</span>
+                <span className="model-count">
                   ({runs.length} / {countPrompts ?? "?"})
                 </span>
-              </h2>
+              </summary>
 
-              <div className="table-wrap">
-                <table className="results-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "35%" }}>Prompt</th>
-                      <th>Response</th>
-                      <th>Error</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {runs.map((r, i) => (
-                      <tr key={i}>
-                        <td className="cell prompt">
-                          <pre>{r.prompt}</pre>
-                        </td>
-                        <td className="cell response">
-                          <pre>{r.response}</pre>
-                        </td>
-                        <td className="cell error-cell">{r.error ?? ""}</td>
+              <div className="model-body">
+                <div className="model-actions">
+                  <button
+                    className="btn btn-small"
+                    onClick={() => expandCollapseAllRows(modelName, true)}
+                    title="Expand all rows"
+                  >
+                    Expand all rows
+                  </button>
+                  <button
+                    className="btn btn-small"
+                    onClick={() => expandCollapseAllRows(modelName, false)}
+                    title="Collapse all rows"
+                  >
+                    Collapse all rows
+                  </button>
+                </div>
+
+                <div className="table-wrap">
+                  <table className="results-table">
+                    <thead>
+                      <tr>
+                        <th>Prompt • Response (click row to expand)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {runs.map((r, i) => (
+                        <tr key={i}>
+                          <td className="cell row-dropdown-cell" colSpan={3}>
+                            <details className="row-dropdown">
+                              <summary>
+                                <span className="caret" aria-hidden>
+                                  ▸
+                                </span>
+                                <span className="summary-title">
+                                  {truncate(r.prompt, 100)}
+                                </span>
+                                {r.error ? (
+                                  <span className="summary-badge badge-error">
+                                    error
+                                  </span>
+                                ) : (
+                                  <span className="summary-badge badge-ok">
+                                    ready
+                                  </span>
+                                )}
+                              </summary>
+
+                              <div className="row-body">
+                                <div className="row-section">
+                                  <div className="row-label">Prompt</div>
+                                  <pre className="row-pre">{r.prompt}</pre>
+                                </div>
+
+                                <div className="row-section">
+                                  <div className="row-label">Response</div>
+                                  <pre className="row-pre">{r.response}</pre>
+                                </div>
+
+                                {r.error && (
+                                  <div className="row-section">
+                                    <div className="row-label">Error</div>
+                                    <pre className="row-pre row-pre-error">
+                                      {r.error}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            </details>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </section>
+            </details>
           ))}
 
         {!hasResults && !streaming && (
