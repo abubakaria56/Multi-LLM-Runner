@@ -1,127 +1,98 @@
-import json
-from typing import List, Tuple
+# backend/app/services/runner.py
+import asyncio
+import time
+from typing import Any, Dict, List, AsyncIterator, Optional
 
 from ..models.llm_provider import KongLLM, Message
-from ..models.question_objects import Question
+from ..core.settings import settings
+from .state import get_memory, reset_memory_if_first_time, mark_used
 
 
-async def load_questions_from_jsonl_bytes(file_bytes: bytes) -> List[Question]:
-    questions: List[Question] = []
-    for raw_line in file_bytes.splitlines():
-        line = raw_line.decode("utf-8").strip()
-        if not line:
-            continue
+async def run_models_stream_concurrent_prompt(
+    prompt_text: str,
+    *,
+    model_names: Optional[List[str]] = None,
+) -> AsyncIterator[Dict[str, Any]]:
+    # Use selected models if provided, else default to all
+    all_default = list(KongLLM.model_name_map.keys())
+    models_to_run = model_names or settings.enabled_models or all_default
+
+    # If a model is chosen "at this point" for the first time, start with blank memory
+    reset_memory_if_first_time(models_to_run)
+
+    # Tell client what's coming
+    yield {"event": "start", "count_prompts": 1, "models": models_to_run}
+
+    event_queue: "asyncio.Queue[Dict[str, Any]]" = asyncio.Queue()
+
+    async def model_worker(model_display_name: str) -> None:
+        memory = get_memory(model_display_name)
+        turn_index = sum(1 for m in memory if m.role == "user")
+
+        await event_queue.put(
+            {
+                "event": "progress",
+                "model": model_display_name,
+                "prompt_index": turn_index,
+                "prompt": prompt_text,
+                "status": "started",
+            }
+        )
+
+        started_at = time.perf_counter()
         try:
-            question_data = json.loads(line)
-            questions.append(Question.from_dict(question_data))
-        except json.JSONDecodeError:
-            continue
-    return questions
+            # 1) add user -> memory
+            memory.append(Message(role="user", content=prompt_text))
 
+            # 2) call model with full memory
+            async with KongLLM(model_display_name) as model:
+                assistant_reply = await model.chat_complete(messages=memory)
 
-def extract_all_user_prompts(questions: List[Question]) -> List[Tuple[str, str]]:
-    user_prompt_pairs: List[Tuple[str, str]] = []
-    for question in questions:
-        for turn in question.conversation:
-            if turn.role == "user":
-                user_prompt_pairs.append((question.question_id, turn.content))
-    return user_prompt_pairs
+            # 3) add assistant -> memory
+            memory.append(Message(role="assistant", content=assistant_reply.content))
+            # mark this model as "now used"
+            mark_used(model_display_name)
 
+            duration_ms = int((time.perf_counter() - started_at) * 1000)
+            await event_queue.put(
+                {
+                    "event": "result",
+                    "model": model_display_name,
+                    "prompt_index": turn_index,
+                    "prompt": prompt_text,
+                    "response": assistant_reply.content,
+                    "error": None,
+                    "duration_ms": duration_ms,
+                }
+            )
+        except Exception as error:
+            duration_ms = int((time.perf_counter() - started_at) * 1000)
+            await event_queue.put(
+                {
+                    "event": "result",
+                    "model": model_display_name,
+                    "prompt_index": turn_index,
+                    "prompt": prompt_text,
+                    "response": "",
+                    "error": str(error),
+                    "duration_ms": duration_ms,
+                }
+            )
 
-# async def run_models_over_prompts(
-#     user_prompts: List[str],
-# ) -> Dict[str, List[Dict[str, Any]]]:
-#     results_by_model: Dict[str, List[Dict[str, Any]]] = {}
-#     model_names_to_run = list(KongLLM.model_name_map.keys())
+        await event_queue.put({"event": "_worker_done", "model": model_display_name})
 
-#     async def run_single_model(model_display_name: str):
-#         model_results: List[Dict[str, Any]] = []
-#         conversation_state: List[Message] = []
+    workers = [asyncio.create_task(model_worker(name)) for name in models_to_run]
 
-#         async with KongLLM(model_name=model_display_name) as model:
-#             for prompt_index, prompt_text in enumerate(user_prompts):
-#                 try:
-#                     conversation_state.append(Message(role="user", content=prompt_text))
-#                     assistant_reply = await model.chat_complete(
-#                         messages=conversation_state
-#                     )
-#                     conversation_state.append(
-#                         Message(role="assistant", content=assistant_reply.content)
-#                     )
-#                     model_results.append(
-#                         {
-#                             "prompt_index": prompt_index,
-#                             "prompt": prompt_text,
-#                             "response": assistant_reply.content,
-#                             "error": None,
-#                         }
-#                     )
-#                 except Exception as error:
-#                     conversation_state.append(
-#                         Message(role="assistant", content=f"[ERROR] {error}")
-#                     )
-#                     model_results.append(
-#                         {
-#                             "prompt_index": prompt_index,
-#                             "prompt": prompt_text,
-#                             "response": "",
-#                             "error": str(error),
-#                         }
-#                     )
-
-#         results_by_model[model_display_name] = model_results
-
-#     for model_name in model_names_to_run:
-#         await run_single_model(model_name)
-
-#     return results_by_model
-
-
-async def run_models_stream(
-    user_prompts: List[str]
-):
-    models_to_run = list(KongLLM.model_name_map.keys())
-
-    yield {
-        "event": "start",
-        "count_prompts": len(user_prompts),
-        "models": models_to_run,
-    }
-
-    for model_display_name in models_to_run:
-        conversation_state: List[Message] = []
-
-        async with KongLLM(model_name=model_display_name) as model:
-            for prompt_index, prompt_text in enumerate(user_prompts):
-                try:
-                    conversation_state.append(Message(role="user", content=prompt_text))
-                    assistant_reply = await model.chat_complete(
-                        messages=conversation_state
-                    )
-                    conversation_state.append(
-                        Message(role="assistant", content=assistant_reply.content)
-                    )
-
-                    yield {
-                        "event": "result",
-                        "model": model_display_name,
-                        "prompt_index": prompt_index,
-                        "prompt": prompt_text,
-                        "response": assistant_reply.content,
-                        "error": None,
-                    }
-
-                except Exception as error:
-                    conversation_state.append(
-                        Message(role="assistant", content=f"[ERROR] {error}")
-                    )
-                    yield {
-                        "event": "result",
-                        "model": model_display_name,
-                        "prompt_index": prompt_index,
-                        "prompt": prompt_text,
-                        "response": "",
-                        "error": str(error),
-                    }
+    done_workers = 0
+    total_workers = len(workers)
+    try:
+        while done_workers < total_workers:
+            event = await event_queue.get()
+            if event.get("event") == "_worker_done":
+                done_workers += 1
+                continue
+            yield event
+    finally:
+        await asyncio.gather(*workers, return_exceptions=True)
 
     yield {"event": "end"}
