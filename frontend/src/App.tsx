@@ -244,6 +244,22 @@ export default function App() {
   const turnSeqRef = useRef(0);
   const activeTurnRef = useRef<number | null>(null);
 
+  // AbortController for current run
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Run button visual state: idle | busy | just-done
+  const [runHue, setRunHue] = useState<"idle" | "busy" | "done">("idle");
+  useEffect(() => {
+    if (streaming) {
+      setRunHue("busy");
+    } else {
+      // briefly show green after finishing
+      setRunHue("done");
+      const t = setTimeout(() => setRunHue("idle"), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [streaming]);
+
   // ----- TIMELINE ORDER: oldest → newest
   const turnIds = useMemo(() => {
     const s = new Set<number>();
@@ -276,14 +292,23 @@ export default function App() {
     setError(null);
     setStreaming(true);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     let res: Response;
     try {
       res = await fetch("http://localhost:8000/api/chat-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
     } catch (err: any) {
+      if (controller.signal.aborted) {
+        // aborted locally: don't surface an error
+        setStreaming(false);
+        return;
+      }
       setStreaming(false);
       setError(err?.message ?? String(err));
       return;
@@ -329,9 +354,13 @@ export default function App() {
         } catch {}
       }
     } catch (err: any) {
-      setError(err?.message ?? String(err));
+      if (!controller.signal.aborted) {
+        setError(err?.message ?? String(err));
+      }
     } finally {
       setStreaming(false);
+      abortRef.current = null;
+      activeTurnRef.current = null;
     }
   }
 
@@ -378,6 +407,37 @@ export default function App() {
     }
   }
 
+  /** Abort the current run and erase any partial state of this turn. */
+  function stopCurrentTurn() {
+    const turnId = activeTurnRef.current;
+    if (turnId == null) return;
+
+    // Abort network streaming
+    abortRef.current?.abort();
+
+    // Remove this turn from all state (but keep past turns)
+    setResults((prev) => {
+      const next: ResultsMap = {};
+      for (const [model, rows] of Object.entries(prev)) {
+        const { [turnId]: _omit, ...rest } = rows;
+        next[model] = rest;
+      }
+      return next;
+    });
+    setTurnModels((prev) => {
+      const { [turnId]: _omit, ...rest } = prev;
+      return rest;
+    });
+    setTurnPrompts((prev) => {
+      const { [turnId]: _omit, ...rest } = prev;
+      return rest;
+    });
+
+    activeTurnRef.current = null;
+    setStreaming(false);
+    setError(null);
+  }
+
   async function resetMemory(modelsToReset?: string[]) {
     try {
       await fetch("http://localhost:8000/api/reset-memory", {
@@ -397,6 +457,8 @@ export default function App() {
         setTurnModels({});
         setTurnPrompts({});
         activeTurnRef.current = null;
+        abortRef.current?.abort();
+        abortRef.current = null;
         turnSeqRef.current = 0;
       }
     } catch {
@@ -411,8 +473,7 @@ export default function App() {
     const currentPrompt = prompt;
     setPrompt(""); // reset input immediately
 
-    // NEW: if this is the very first prompt and no models are selected,
-    // auto-select all chips so they turn blue while the run is in progress.
+    // If first prompt & none selected, auto-select all chips so they turn blue during the run
     if (selectedModels.length === 0 && turnSeqRef.current === 0) {
       setSelectedModels(ALL_MODELS);
     }
@@ -452,7 +513,7 @@ export default function App() {
         <div className="container">
           <h1 className="title">KongLLM Multi-Model Runner</h1>
           <p className="subtitle">
-            Oldest turns stay on top. New prompts appear at the bottom.
+            Type while a run is in progress. Stop cancels only the current turn.
           </p>
 
           <div className="chip-row">
@@ -462,7 +523,7 @@ export default function App() {
                 type="button"
                 className={chipClass(m)}
                 onClick={() => toggleModel(m)}
-                disabled={streaming}
+                // You can still change selection while running if you want; next turn will use it.
                 aria-pressed={selectedModels.includes(m)}
               >
                 {m}
@@ -476,11 +537,32 @@ export default function App() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask me anything…"
-              disabled={streaming}
+              className={streaming ? "input input--busy" : "input"}
             />
-            <button className="btn" disabled={!prompt.trim() || streaming}>
+            <button
+              className={`btn btn-run ${
+                runHue === "busy"
+                  ? "is-busy"
+                  : runHue === "done"
+                  ? "is-done"
+                  : ""
+              }`}
+              disabled={!prompt.trim() || streaming}
+            >
               {streaming ? "Running…" : "Run"}
             </button>
+
+            {streaming && (
+              <button
+                type="button"
+                className="btn btn-stop"
+                onClick={stopCurrentTurn}
+                title="Stop current turn"
+              >
+                Stop
+              </button>
+            )}
+
             <button
               type="button"
               className="btn btn-secondary"
@@ -488,6 +570,11 @@ export default function App() {
                 resetMemory(selectedModels.length ? selectedModels : undefined)
               }
               disabled={streaming}
+              title={
+                selectedModels.length
+                  ? "Reset only selected models"
+                  : "Reset all models"
+              }
             >
               Reset memory
             </button>
@@ -609,16 +696,18 @@ export default function App() {
                         {row.status === "done" && !row.error && normalized && (
                           <article className="md">
                             <ReactMarkdown
-                              remarkPlugins={[remarkGfm, remarkMath]}
-                              rehypePlugins={[
-                                [rehypeHighlight, {}],
+                              remarkPlugins={[remarkGfm, remarkMath] as any}
+                              rehypePlugins={
                                 [
-                                  rehypeKatex,
-                                  { throwOnError: true, strict: "warn" },
-                                ],
-                              ]}
+                                  rehypeHighlight as any,
+                                  [
+                                    rehypeKatex as any,
+                                    { throwOnError: true, strict: "warn" },
+                                  ],
+                                ] as any
+                              }
                               components={{
-                                a: ({ node, ...props }) => (
+                                a: (props: any) => (
                                   <a
                                     {...props}
                                     target="_blank"
@@ -630,7 +719,7 @@ export default function App() {
                                   className,
                                   children,
                                   ...props
-                                }) =>
+                                }: any) =>
                                   inline ? (
                                     <code className={className} {...props}>
                                       {children}
