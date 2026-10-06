@@ -410,7 +410,7 @@ The JSON should match this schema:
                 response_text = response.text.strip()
 
                 # Try to extract JSON from response
-                json_match = re.search(r"{{.*}}", response_text, re.DOTALL)
+                json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
                 if json_match:
                     response_text = json_match.group(0)
 
@@ -491,6 +491,7 @@ class OpenRouterLLM:
         "GPT 4o": "openai/gpt-4o-2024-08-06",
         "Gemini 2.5 Flash": "google/gemini-2.5-flash",
         "Gemini 2.5 Pro": "google/gemini-2.5-pro",
+        "Nova Premier": "amazon/nova-premier-v1",
         "Qwen 3": "qwen/qwen3-235b-a22b",
     }
 
@@ -752,7 +753,7 @@ The JSON should match this schema:
                 response_text = response.text.strip()
 
                 # Try to extract JSON from response
-                json_match = re.search(r"{{.*}}", response_text, re.DOTALL)
+                json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
                 if json_match:
                     response_text = json_match.group(0)
 
@@ -838,6 +839,10 @@ class UnifiedLLM:
 
     OPENROUTER_MODELS = {"Sonnet 3.7", "Qwen 3"}
 
+    # LLM_PROVIDER selects the backend: "kong" (default) or "openrouter" sends every
+    # model to that provider; "auto" uses the per-model routing above.
+    PROVIDER_MODES = {"auto", "kong", "openrouter"}
+
     def __init__(
         self,
         model_name: str = "Gemini 2.5 Pro",
@@ -850,8 +855,22 @@ class UnifiedLLM:
         self.max_tokens = max_tokens
         self.kwargs = kwargs
 
+        mode = os.environ.get("LLM_PROVIDER", "kong").strip().lower()
+        if mode not in self.PROVIDER_MODES:
+            raise ValueError(
+                f"LLM_PROVIDER must be one of {sorted(self.PROVIDER_MODES)}, got {mode!r}"
+            )
+
         # Route to appropriate provider
-        if model_name in self.KONG_MODELS:
+        if mode == "openrouter":
+            self.provider = OpenRouterLLM(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            )
+            self.provider_type = "openrouter"
+        elif mode == "kong" or model_name in self.KONG_MODELS:
             self.provider = KongLLM(
                 model_name=model_name,
                 temperature=temperature,
@@ -933,74 +952,5 @@ class UnifiedLLM:
 # For backward compatibility, create aliases
 LLM = UnifiedLLM  # Main alias for external use
 
-
-# # Example usage
-# if __name__ == "__main__":
-#     import os
-
-#     async def test_llm():
-#         # Test Kong model
-#         logger.info("Testing UnifiedLLM routing...")
-#         llm_kong = UnifiedLLM(model_name="Nova Premier")
-
-#         # Test with a model that would go to OpenRouter (but skip if no API key)
-#         try:
-#             llm_openrouter = UnifiedLLM(model_name="Qwen 3")
-#             has_openrouter = True
-#         except AssertionError as e:
-#             logger.warning(f"Skipping OpenRouter test: {e}")
-#             llm_openrouter = None
-#             has_openrouter = False
-
-#         try:
-#             # Test Kong provider
-#             logger.info(f"Testing Kong provider with {llm_kong.provider_type}...")
-#             response = await llm_kong.acomplete("Hello, how are you?")
-#             logger.info(f"Kong completion: {response.text[:100]}...")
-
-#             # Test OpenRouter provider if available
-#             if has_openrouter and llm_openrouter:
-#                 logger.info(
-#                     f"Testing OpenRouter provider with {llm_openrouter.provider_type}..."
-#                 )
-#                 response = await llm_openrouter.acomplete(
-#                     "What is the capital of France?"
-#                 )
-#                 logger.info(f"OpenRouter completion: {response.text[:100]}...")
-
-#             # Test chat completion
-#             messages = [Message(role="user", content="What is 2+2?")]
-#             chat_response = await llm_kong.chat_complete(messages)
-#             logger.info(f"Chat completion: {chat_response.content[:100]}...")
-
-#         except Exception as e:
-#             logger.error(f"Error: {e}")
-#         finally:
-#             await llm_kong.aclose()
-#             if has_openrouter and llm_openrouter:
-#                 await llm_openrouter.aclose()
-
-#     # Run the test
-#     asyncio.run(test_llm())
-
-# Example usage
-# if __name__ == "__main__":
-#     chat_history = []
-
-
-
-#     user = [Message(role="user",content=input("USER: "))]
-    
-#     while user.lower() not in ["quit", "exit"]:
-#         async def main():
-#             for model in KongLLM.model_name_map.keys():
-#                 async with KongLLM(model_name=model) as llm:
-#                     response = await llm.chat_complete(user)
-#                     chat_history.append(response)
-#                     print(f"{KongLLM.model_name_map[model]}: {response.text}")
-#         asyncio.run(main())
-#         user = input("USER: ")
-
-
-
-
+# Display names the runner offers by default, in the order the UI shows them
+AVAILABLE_MODELS: List[str] = list(KongLLM.model_name_map)

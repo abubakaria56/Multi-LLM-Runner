@@ -1,20 +1,14 @@
 [project]
-name = "kongllm-eval-backend"
+name = "multi-llm-runner-backend"
 version = "0.1.0"
-description = "KongLLM multi-model evaluator backend"
+description = "FastAPI backend that runs one prompt across several LLMs concurrently and streams the results"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "python-dotenv>=1.0.1",
-    "python-multipart>=0.0.9",
     "httpx>=0.28.1",
     "pydantic>=2.11.0",
     "tenacity>=9.1.0",
-    "plotly>=6.3.0",
-    "psutil>=7.0.0",
-    "redis>=6.4.0",
-    "streamlit-autorefresh>=1.0.1",
-    "watchdog>=6.0.0",
 ]

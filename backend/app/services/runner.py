@@ -3,7 +3,7 @@ import asyncio
 import time
 from typing import Any, Dict, List, AsyncIterator, Optional
 
-from ..models.llm_provider import KongLLM, Message
+from ..models.llm_provider import AVAILABLE_MODELS, Message, UnifiedLLM
 from ..core.settings import settings
 from .state import get_memory, reset_memory_if_first_time, mark_used
 
@@ -14,8 +14,7 @@ async def run_models_stream_concurrent_prompt(
     model_names: Optional[List[str]] = None,
 ) -> AsyncIterator[Dict[str, Any]]:
     # Use selected models if provided, else default to all
-    all_default = list(KongLLM.model_name_map.keys())
-    models_to_run = model_names or settings.enabled_models or all_default
+    models_to_run = model_names or settings.enabled_models or AVAILABLE_MODELS
 
     # If a model is chosen "at this point" for the first time, start with blank memory
     reset_memory_if_first_time(models_to_run)
@@ -45,7 +44,7 @@ async def run_models_stream_concurrent_prompt(
             memory.append(Message(role="user", content=prompt_text))
 
             # 2) call model with full memory
-            async with KongLLM(model_display_name) as model:
+            async with UnifiedLLM(model_display_name) as model:
                 assistant_reply = await model.chat_complete(messages=memory)
 
             # 3) add assistant -> memory

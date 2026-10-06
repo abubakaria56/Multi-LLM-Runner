@@ -1,13 +1,12 @@
 # backend/app/services/state.py
 from typing import Dict, List, Optional
-from ..models.llm_provider import Message
-from ..models.llm_provider import KongLLM
+from ..models.llm_provider import AVAILABLE_MODELS, Message
 
 conversation_memory: Dict[str, List[Message]] = {
-    model_name: [] for model_name in KongLLM.model_name_map.keys()
+    model_name: [] for model_name in AVAILABLE_MODELS
 }
 used_models: Dict[str, bool] = {
-    model_name: False for model_name in KongLLM.model_name_map.keys()
+    model_name: False for model_name in AVAILABLE_MODELS
 }
 
 

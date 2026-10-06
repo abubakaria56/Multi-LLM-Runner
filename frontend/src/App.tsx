@@ -45,6 +45,10 @@ type StreamEvent = StartEvent | ProgressEvent | ResultEvent | EndEvent;
 
 /* ---------------- Constants ---------------- */
 
+// Backend origin; override with VITE_API_BASE_URL in frontend/.env
+const API_BASE_URL: string =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
 const ALL_MODELS = [
   "DeepSeek R1 New",
   "DeepSeek R1",
@@ -229,7 +233,7 @@ export default function App() {
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
   // current turn's models (from /start)
-  const [models, setModels] = useState<string[]>([]);
+  const [, setModels] = useState<string[]>([]);
 
   // results: results[model][turnId] -> Row
   const [results, setResults] = useState<ResultsMap>({});
@@ -297,7 +301,7 @@ export default function App() {
 
     let res: Response;
     try {
-      res = await fetch("http://localhost:8000/api/chat-stream", {
+      res = await fetch(`${API_BASE_URL}/api/chat-stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -440,7 +444,7 @@ export default function App() {
 
   async function resetMemory(modelsToReset?: string[]) {
     try {
-      await fetch("http://localhost:8000/api/reset-memory", {
+      await fetch(`${API_BASE_URL}/api/reset-memory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ models: modelsToReset ?? null }),
