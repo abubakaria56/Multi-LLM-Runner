@@ -1,5 +1,18 @@
-
-# backend ignores
+# Python
+__pycache__/
+*.py[cod]
 backend/.venv/
 backend/venv/
-backend/.env
+
+# Environment files hold API keys; only the example is committed
+.env
+!.env.example
+
+# Node / Vite
+node_modules/
+frontend/dist/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
