@@ -1,45 +1,27 @@
 ---
 title: Home
-layout: home
 nav_order: 1
-description: Send one prompt to several language models in parallel and compare their answers side by side.
 permalink: /
 ---
 
 # Multi-LLM Runner
-{: .fs-9 }
 
-Ask once. Compare every model.
-{: .fs-6 .fw-300 }
+Multi-LLM Runner sends the same prompt to several language models at once and shows their answers next to each other.
 
-Send one prompt to several large language models in parallel and watch their answers stream in side by side, each with its own conversation memory and response time.
-{: .fs-5 .fw-300 }
+The usual way to compare models is to paste one prompt into a handful of chat windows and keep track of which answer came from where. Here you pick the models, type the prompt once, and each answer appears in its own column when that model finishes, along with how long it took. Every model also keeps its own conversation, so you can ask follow-up questions and see how the models hold up over several turns, not just the first one.
 
-[Get started]({% link getting-started.md %}){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[View on GitHub](https://github.com/abubakaria56/Multi-LLM-Runner){: .btn .fs-5 .mb-4 .mb-md-0 }
+![The Multi-LLM Runner page: model picker, prompt box, Run and Reset memory buttons]({{ '/screenshot.png' | relative_url }})
 
-![Multi-LLM Runner interface: model picker, prompt box, Run and Reset memory buttons]({{ '/screenshot.png' | relative_url }})
+## What it does
 
----
+- Calls the selected models at the same time, so one slow model doesn't hold up the others.
+- Streams each answer to the page as soon as it's ready.
+- Keeps a separate chat history for each model. You can reset all of them or only some.
+- Shows the response time for every answer. If a model fails, its error shows up in its own column and the rest carry on.
+- Retries on timeouts, rate limits and malformed responses, and strips `<think>` blocks out of reasoning models' answers.
+- Works with OpenRouter or a Kong-style LLM gateway, chosen with one environment variable.
+- Renders Markdown, code and LaTeX in the answers.
 
-## Why
+The backend is FastAPI on Python 3.11, and the frontend is React with TypeScript and Vite.
 
-Comparing language models usually means pasting the same prompt into several chat windows, losing track of which model said what, and guessing at speed. Multi-LLM Runner makes that comparison a single action: one prompt goes to every selected model at the same moment, and each answer arrives in its own column as soon as that model finishes. Follow-up prompts keep each model's own conversation history, so multi-turn behaviour can be compared too.
-
-It was built as a lightweight workbench for evaluating models side by side, and as the foundation for a batch benchmark runner with an LLM judge (see the [roadmap]({% link roadmap.md %})).
-
-## Features
-
-| Feature | What it does |
-|---|---|
-| ⚡ **Concurrent fan-out** | Every selected model is called in parallel with `asyncio`; a slow model never blocks a fast one. |
-| 📡 **Live streaming** | Results stream to the browser as newline-delimited JSON the moment each model finishes. |
-| 🧠 **Per-model memory** | Each model keeps its own multi-turn history; reset it for all models or a chosen subset. |
-| ⏱️ **Latency and errors per model** | Every answer carries its response time; a failing model reports its own error without stopping the others. |
-| 🔁 **Resilient calls** | Exponential-backoff retries on timeouts, rate limits and malformed responses; `<think>` reasoning blocks are stripped from answers. |
-| 🔌 **Two providers** | Serve models through [OpenRouter](https://openrouter.ai) or a Kong-style LLM gateway, switched with one environment variable. |
-| 📝 **Rich rendering** | GitHub-flavoured Markdown, syntax-highlighted code and KaTeX maths, sanitised before display. |
-
-## Built with
-
-Python 3.11+ · FastAPI · React 19 · TypeScript 5 · Vite 7 · OpenRouter
+To run it yourself, start with [Getting started]({% link getting-started.md %}). [How it works]({% link how-it-works.md %}) explains how a request moves through the backend, and the routes are in the [API reference]({% link api.md %}). Next on the list is a batch mode that runs a benchmark file across models and grades the answers with an LLM judge; see the [roadmap]({% link roadmap.md %}).

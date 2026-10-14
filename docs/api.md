@@ -4,27 +4,20 @@ nav_order: 5
 ---
 
 # API reference
-{: .no_toc }
 
-All routes are under `/api`. When the backend is running, interactive docs are served at <http://localhost:8000/docs>.
-{: .fs-5 .fw-300 }
+There are three routes, all under `/api`. With the backend running you can also try them from FastAPI's docs page at <http://localhost:8000/docs>.
 
-1. TOC
-{:toc}
+## POST /api/chat-stream
 
----
-
-## `POST /api/chat-stream`
-
-Sends one prompt to the selected models and streams their results.
+Sends a prompt to the chosen models and streams back what happens.
 
 ```json
 { "prompt": "Explain attention in two sentences.", "models": ["GPT 4o", "Gemini 2.5 Pro"] }
 ```
 
-`models` is optional; when it is omitted, the models in `ENABLED_MODELS` are used, or every model if that is unset. An empty `prompt` returns `400`.
+You can leave out `models`. The backend then uses `ENABLED_MODELS`, or every model if that isn't set. An empty prompt gets a `400`.
 
-The response is `application/x-ndjson`, one event per line:
+The response is `application/x-ndjson`, one JSON event per line:
 
 ```json
 {"event": "start", "count_prompts": 1, "models": ["GPT 4o", "Gemini 2.5 Pro"]}
@@ -33,27 +26,20 @@ The response is `application/x-ndjson`, one event per line:
 {"event": "end"}
 ```
 
-Every selected model produces exactly one `result`: `error` is `null` on success, and `response` is empty on failure. `prompt_index` is the turn number in that model's conversation, starting at `0`.
+You get one `start`, then a `progress` for each model as its call begins, then one `result` per model as each finishes, and finally `end`. In a `result`, `error` is `null` when the call worked; when it didn't, `error` holds the message and `response` is empty. `prompt_index` counts the turns in that model's conversation, starting from `0`.
 
-| Event | Fields | When |
-|---|---|---|
-| `start` | `count_prompts`, `models` | Once, before any model is called |
-| `progress` | `model`, `prompt_index`, `prompt`, `status` | When a model's call starts |
-| `result` | `model`, `prompt_index`, `prompt`, `response`, `error`, `duration_ms` | When a model finishes or fails |
-| `end` | none | Once, after every model has reported its `result` |
-
-## `POST /api/reset-memory`
+## POST /api/reset-memory
 
 ```json
 { "models": ["GPT 4o"] }
 ```
 
-Clears those models' conversation history. Omit `models` to clear all.
+Clears the conversation history for those models. Leave out `models` to clear everyone's.
 
-## `POST /api/remove-models`
+## POST /api/remove-models
 
 ```json
 { "models": ["Nova Premier"] }
 ```
 
-Drops those models' history and marks them unused, so they start fresh if selected again.
+Throws away those models' history and marks them as unused, so they start from scratch if you pick them again.

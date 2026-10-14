@@ -4,16 +4,8 @@ nav_order: 3
 ---
 
 # How it works
-{: .no_toc }
 
-1. TOC
-{:toc}
-
----
-
-## Architecture
-
-The React interface sends a prompt and a list of models to the FastAPI backend. The runner starts one `asyncio` task per model, each with that model's conversation history, and pushes every event onto a queue that streams back to the browser as newline-delimited JSON.
+When you click **Run**, the frontend sends the prompt and the selected models to `POST /api/chat-stream`. The backend starts one asyncio task per model. Each task adds the prompt to that model's history, calls the model with the whole history, and puts the result on a shared queue. The endpoint reads from that queue and writes each event to the response as one line of JSON, which is how the page can show an answer the moment its model is done.
 
 ```mermaid
 flowchart LR
@@ -27,9 +19,7 @@ flowchart LR
     R <--> S[("Per-model<br/>conversation memory")]
 ```
 
-## Request lifecycle
-
-Each prompt follows the same lifecycle. Results arrive in the order the models finish, not the order they were selected.
+Here is one request with two models. Model B answers first, so its result reaches the browser first:
 
 ```mermaid
 sequenceDiagram
@@ -51,7 +41,9 @@ sequenceDiagram
     API-->>UI: end
 ```
 
-## Project structure
+Conversation history lives in memory in the backend process (`services/state.py`). Everyone using the same backend shares it, and it's gone when the server restarts.
+
+## Where things are
 
 ```
 Multi-LLM-Runner/
@@ -63,8 +55,8 @@ Multi-LLM-Runner/
 │       ├── models/llm_provider.py     OpenRouter and Kong clients, retries, routing
 │       ├── models/question_objects.py benchmark loader and LLM-judge schema
 │       └── services/
-│           ├── runner.py              concurrent fan-out and event streaming
+│           ├── runner.py              runs the models and streams the events
 │           └── state.py               per-model conversation memory
 └── frontend/
-    └── src/App.tsx                    model picker, streaming columns, Markdown and maths
+    └── src/App.tsx                    model picker, answer columns, Markdown and maths
 ```

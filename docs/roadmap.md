@@ -5,11 +5,10 @@ nav_order: 6
 
 # Roadmap
 
-| Status | Item |
-|---|---|
-| ✅ Done | Concurrent multi-model chat with per-model memory |
-| ✅ Done | Streaming results with per-model latency and errors |
-| ✅ Done | OpenRouter and Kong gateway providers |
-| Planned | **Batch benchmark mode:** run a JSONL benchmark across models (loader and schema already in `question_objects.py`) |
-| Planned | **LLM-judge grading:** score each answer YES/NO with reasoning, using the `JudgeResponse` schema |
-| Planned | Enforce `MAX_CONCURRENT_EVALS` and per-client conversation memory (memory is currently held in process and shared) |
+Chatting with several models at once, per-model memory, streaming with timings and errors, and the OpenRouter and Kong providers all work today.
+
+Still to do:
+
+- **Batch benchmark mode.** Run a JSONL benchmark across the models instead of one prompt at a time. The loader and question schema are already in `question_objects.py`.
+- **LLM-judge grading.** Have a judge model mark each answer YES or NO and explain why, using the `JudgeResponse` schema that's already there.
+- **Concurrency limit and per-user memory.** `MAX_CONCURRENT_EVALS` is read from the settings but not enforced yet, and conversation memory is one shared copy rather than one per user.
