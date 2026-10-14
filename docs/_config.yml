@@ -1,0 +1,35 @@
+title: Multi-LLM Runner
+description: Send one prompt to several language models in parallel and compare their answers side by side.
+url: https://abubakaria56.github.io
+baseurl: /Multi-LLM-Runner
+
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+plugins:
+  - jekyll-remote-theme
+
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+
+aux_links:
+  "View on GitHub":
+    - "https://github.com/abubakaria56/Multi-LLM-Runner"
+aux_links_new_tab: true
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/abubakaria56/Multi-LLM-Runner"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+mermaid:
+  version: "11.4.1"
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
