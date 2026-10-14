@@ -13,7 +13,7 @@ Send one prompt to several large language models in parallel and watch their ans
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![OpenRouter](https://img.shields.io/badge/OpenRouter-supported-6E56CF)
 
-[Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Configuration](#configuration) · [API](#api-reference) · [Roadmap](#roadmap)
+[**Documentation**](https://abubakaria56.github.io/Multi-LLM-Runner/) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Configuration](#configuration) · [API](#api-reference) · [Roadmap](#roadmap)
 
 <img src="docs/screenshot.png" alt="Multi-LLM Runner interface: model picker, prompt box, Run and Reset memory buttons" width="900">
 
