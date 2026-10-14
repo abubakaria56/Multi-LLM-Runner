@@ -1,0 +1,103 @@
+.site-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  gap: 10px;
+
+  &::before {
+    content: "";
+    flex: none;
+    width: 26px;
+    height: 26px;
+    background: url("../images/favicon.svg") center / contain no-repeat;
+  }
+}
+
+.main-content {
+  h1 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  h2,
+  h3 {
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  h1:first-child + p {
+    font-size: 1.12rem;
+  }
+
+  code {
+    border-radius: 6px;
+  }
+
+  div.highlighter-rouge,
+  figure.highlight {
+    border-radius: 12px;
+    border: 1px solid $border-color;
+  }
+
+  table {
+    border-radius: 12px;
+  }
+
+  .mermaid,
+  pre.language-mermaid {
+    background: transparent;
+    border: 0;
+  }
+}
+
+.btn-primary {
+  background-image: linear-gradient(180deg, lighten($btn-primary-color, 6%), $btn-primary-color);
+  border-radius: 10px;
+}
+
+.nav-list .nav-list-item .nav-list-link.active {
+  color: $link-color;
+  font-weight: 600;
+}
+
+.mlr-theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  align-self: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin: 0 0.5rem;
+  border-radius: 10px;
+  border: 1px solid $border-color;
+  background: $body-background-color;
+  color: $body-text-color;
+  cursor: pointer;
+
+  &:hover {
+    color: $body-heading-color;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mlr-moon {
+    display: none;
+  }
+}
+
+html[data-theme="dark"] .mlr-theme-toggle {
+  .mlr-sun {
+    display: none;
+  }
+
+  .mlr-moon {
+    display: block;
+  }
+}

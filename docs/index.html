@@ -1,0 +1,210 @@
+---
+title: Home
+layout: landing
+nav_order: 1
+permalink: /
+---
+<section class="hero">
+  <div class="wrap hero-inner">
+    <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>FastAPI + React · OpenRouter or Kong</p>
+    <h1>Ask once.<br><span class="grad">Watch every model answer.</span></h1>
+    <p class="lead">Multi-LLM Runner sends your prompt to several language models at the same time. Each answer lands in its own column as soon as that model is done, with how long it took.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="{{ '/getting-started.html' | relative_url }}">Get started <span aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost" href="https://github.com/abubakaria56/Multi-LLM-Runner">View on GitHub</a>
+    </div>
+    <div class="clone">
+      <code><span class="prompt-sign">$</span> git clone https://github.com/abubakaria56/Multi-LLM-Runner.git</code>
+      <button class="copy" type="button" data-copy="git clone https://github.com/abubakaria56/Multi-LLM-Runner.git" aria-label="Copy the clone command">Copy</button>
+    </div>
+
+    <div class="demo reveal" role="img" aria-label="Example: one prompt sent to GPT 4o, Gemini 2.5 Pro and DeepSeek R1. Their answers arrive at different times, each with its response time.">
+      <div class="demo-bar" aria-hidden="true">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="demo-url">localhost:5173</span>
+        <span></span>
+      </div>
+      <div class="demo-body" aria-hidden="true">
+        <div class="chips">
+          <span class="chip on">GPT 4o</span>
+          <span class="chip on">Gemini 2.5 Pro</span>
+          <span class="chip on">DeepSeek R1</span>
+          <span class="chip">Gemini 2.5 Flash</span>
+          <span class="chip">Nova Premier</span>
+          <span class="chip hide-sm">Sonnet 3.7</span>
+        </div>
+        <div class="prompt-row">
+          <div class="prompt-box"><span class="typed" data-text="Explain attention in two sentences."></span><span class="caret"></span></div>
+          <span class="run">Run</span>
+        </div>
+        <div class="cols">
+          <article class="col" data-delay="900" data-time="1.9 s" style="--c: var(--violet)">
+            <header><span class="dot"></span><b>GPT 4o</b><span class="time"></span></header>
+            <div class="answer">
+              <span class="thinking"><i></i><i></i><i></i></span>
+              <p data-text="Attention lets each token look at every other token and decide how much each one matters to it. The model turns tokens into queries, keys and values, and a softmax over query–key scores sets how much of each value gets mixed in."></p>
+            </div>
+          </article>
+          <article class="col" data-delay="2000" data-time="3.4 s" style="--c: var(--sky)">
+            <header><span class="dot"></span><b>Gemini 2.5 Pro</b><span class="time"></span></header>
+            <div class="answer">
+              <span class="thinking"><i></i><i></i><i></i></span>
+              <p data-text="Attention is how a network decides, for each position, which other positions to focus on and by how much. It scores a query against a set of keys, normalises the scores, and returns the matching values weighted by them."></p>
+            </div>
+          </article>
+          <article class="col" data-delay="3300" data-time="5.2 s" style="--c: var(--amber)">
+            <header><span class="dot"></span><b>DeepSeek R1</b><span class="time"></span></header>
+            <div class="answer">
+              <span class="thinking"><i></i><i></i><i></i></span>
+              <p data-text="For every token, attention asks which other tokens are relevant and pulls in information from them in proportion. Stacking many heads and layers is what lets transformers follow long-range dependencies without recurrence."></p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="wrap stats-grid">
+    <div><strong>7</strong><span>models ready to pick</span></div>
+    <div><strong>2</strong><span>providers: OpenRouter or Kong</span></div>
+    <div><strong>1</strong><span>prompt, sent to all of them at once</span></div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">Features</p>
+      <h2>Built for comparing models, not juggling tabs</h2>
+      <p>Pick the models, type the prompt once, and read the answers next to each other. Ask a follow-up and every model carries on its own conversation.</p>
+    </div>
+    <div class="cards">
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.5"/><circle cx="14" cy="12" r="1.5"/><circle cx="10" cy="18" r="1.5"/></svg></span>
+        <h3>Parallel calls</h3>
+        <p>Every selected model is called at the same time, so the slowest one never holds up the rest.</p>
+      </article>
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h14M4 17h7"/><path d="M17 15l3 2-3 2"/></svg></span>
+        <h3>Answers as they land</h3>
+        <p>Results stream to the page as newline-delimited JSON, so each column fills the moment its model finishes.</p>
+      </article>
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4z"/><path d="M9 9h6M9 12h4"/></svg></span>
+        <h3>Memory per model</h3>
+        <p>Each model keeps its own conversation. Reset one of them, a few, or all, without touching the others.</p>
+      </article>
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg></span>
+        <h3>Timing and errors</h3>
+        <p>Every answer shows how long it took. If a call fails, the error shows up in that model's column and the others carry on.</p>
+      </article>
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
+        <h3>Retries built in</h3>
+        <p>Timeouts, rate limits and malformed responses are retried with backoff, and <code>&lt;think&gt;</code> blocks are stripped from reasoning models.</p>
+      </article>
+      <article class="card reveal">
+        <span class="ico"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></span>
+        <h3>Readable output</h3>
+        <p>Markdown, highlighted code and LaTeX render properly in every column, and everything is sanitised first.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="how">
+  <div class="wrap how">
+    <div class="how-text reveal">
+      <p class="kicker">How it works</p>
+      <h2>One request in, a stream of answers out</h2>
+      <ol class="steps">
+        <li><b>You pick models and press Run.</b> The React app posts the prompt and the model list to <code>/api/chat-stream</code>.</li>
+        <li><b>One task per model.</b> FastAPI starts an asyncio task for each model, using that model's own chat history.</li>
+        <li><b>Answers stream back.</b> Each result goes onto a queue and out to the browser as a line of JSON, in the order the models finish.</li>
+      </ol>
+      <a class="text-link" href="{{ '/how-it-works.html' | relative_url }}">Read how it works <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="terminal reveal" aria-label="Example event stream from /api/chat-stream">
+      <div class="terminal-bar"><span class="lights"><i></i><i></i><i></i></span><span>POST /api/chat-stream</span></div>
+<pre class="stream"><code><span class="ln">{"event": <span class="s">"start"</span>, "models": [<span class="s">"GPT 4o"</span>, <span class="s">"Gemini 2.5 Pro"</span>, <span class="s">"DeepSeek R1"</span>]}</span>
+<span class="ln">{"event": <span class="s">"progress"</span>, "model": <span class="s">"GPT 4o"</span>, "status": <span class="s">"started"</span>}</span>
+<span class="ln">{"event": <span class="s">"progress"</span>, "model": <span class="s">"Gemini 2.5 Pro"</span>, "status": <span class="s">"started"</span>}</span>
+<span class="ln">{"event": <span class="s">"progress"</span>, "model": <span class="s">"DeepSeek R1"</span>, "status": <span class="s">"started"</span>}</span>
+<span class="ln">{"event": <span class="s">"result"</span>, "model": <span class="s">"GPT 4o"</span>, "duration_ms": <span class="n">1912</span>, "error": <span class="n">null</span>}</span>
+<span class="ln">{"event": <span class="s">"result"</span>, "model": <span class="s">"Gemini 2.5 Pro"</span>, "duration_ms": <span class="n">3388</span>, "error": <span class="n">null</span>}</span>
+<span class="ln">{"event": <span class="s">"result"</span>, "model": <span class="s">"DeepSeek R1"</span>, "duration_ms": <span class="n">5174</span>, "error": <span class="n">null</span>}</span>
+<span class="ln">{"event": <span class="s">"end"</span>}</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="start">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">Quick start</p>
+      <h2>Running in two terminals</h2>
+      <p>You'll need Python 3.11+ with uv, Node.js 20+, and an OpenRouter API key.</p>
+    </div>
+    <div class="quick">
+      <div class="code-card reveal">
+        <div class="code-head"><span>1 · Backend</span><button class="copy" type="button" data-copy="cd backend
+cp .env.example .env
+uv sync
+uv run uvicorn app.main:app --reload --port 8000">Copy</button></div>
+<pre><code><span class="c"># add your OPENROUTER_API_KEY to .env</span>
+cd backend
+cp .env.example .env
+uv sync
+uv run uvicorn app.main:app --reload --port 8000</code></pre>
+      </div>
+      <div class="code-card reveal">
+        <div class="code-head"><span>2 · Frontend</span><button class="copy" type="button" data-copy="cd frontend
+npm install
+npm run dev">Copy</button></div>
+<pre><code><span class="c"># then open http://localhost:5173</span>
+cd frontend
+npm install
+npm run dev</code></pre>
+      </div>
+    </div>
+    <p class="after-code reveal"><a class="text-link" href="{{ '/getting-started.html' | relative_url }}">Full setup guide <span aria-hidden="true">→</span></a> <a class="text-link" href="{{ '/configuration.html' | relative_url }}">Configuration <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">What's next</p>
+      <h2>From side-by-side chat to benchmark runs</h2>
+    </div>
+    <div class="cards cards-2">
+      <article class="card reveal">
+        <span class="tag">Planned</span>
+        <h3>Batch benchmark mode</h3>
+        <p>Run a whole JSONL benchmark across the models instead of one prompt at a time. The loader and question schema are already in the backend.</p>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Planned</span>
+        <h3>LLM-judge grading</h3>
+        <p>Have a judge model mark each answer YES or NO and explain why, using the <code>JudgeResponse</code> schema that's already there.</p>
+      </article>
+    </div>
+    <p class="after-code reveal"><a class="text-link" href="{{ '/roadmap.html' | relative_url }}">See the roadmap <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <h2>Try it on your own prompts</h2>
+      <p>Clone the repo, add an OpenRouter key, and you can compare models in a few minutes.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="{{ '/getting-started.html' | relative_url }}">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="https://github.com/abubakaria56/Multi-LLM-Runner">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>

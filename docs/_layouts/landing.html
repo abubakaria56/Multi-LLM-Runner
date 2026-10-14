@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-LLM Runner: ask once, compare every model</title>
+  <meta name="description" content="Send one prompt to several language models at the same time and watch each answer stream into its own column, with its response time.">
+  <meta property="og:title" content="Multi-LLM Runner">
+  <meta property="og:description" content="Send one prompt to several language models at once and compare their answers side by side.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://abubakaria56.github.io/Multi-LLM-Runner/screenshot.png">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="{{ '/assets/css/landing.css' | relative_url }}">
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("mlr-theme"); } catch (e) {}
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.classList.add("js");
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="{{ '/' | relative_url }}" aria-label="Multi-LLM Runner home">
+        <img src="{{ '/assets/images/favicon.svg' | relative_url }}" alt="" width="28" height="28">
+        <span>Multi-LLM Runner</span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="{{ '/api.html' | relative_url }}">API</a>
+        <a href="{{ '/getting-started.html' | relative_url }}">Docs</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn theme-toggle" type="button" aria-label="Switch between light and dark mode">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <a class="icon-btn" href="https://github.com/abubakaria56/Multi-LLM-Runner" aria-label="View the code on GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="fill"><path d="M12 .5A11.5 11.5 0 0 0 8.36 22.9c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+        </a>
+        <a class="btn btn-primary btn-sm" href="{{ '/getting-started.html' | relative_url }}">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+{{ content }}
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div class="footer-brand">
+        <img src="{{ '/assets/images/favicon.svg' | relative_url }}" alt="" width="22" height="22">
+        <span>Multi-LLM Runner</span>
+        <span class="footer-by">by <a href="https://github.com/abubakaria56">Al-Waasiu Abubakari</a></span>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="{{ '/getting-started.html' | relative_url }}">Getting started</a>
+        <a href="{{ '/how-it-works.html' | relative_url }}">How it works</a>
+        <a href="{{ '/configuration.html' | relative_url }}">Configuration</a>
+        <a href="{{ '/api.html' | relative_url }}">API</a>
+        <a href="{{ '/roadmap.html' | relative_url }}">Roadmap</a>
+        <a href="https://github.com/abubakaria56/Multi-LLM-Runner">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="{{ '/assets/js/landing.js' | relative_url }}" defer></script>
+</body>
+</html>

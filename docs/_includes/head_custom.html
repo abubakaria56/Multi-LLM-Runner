@@ -1,0 +1,29 @@
+<link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>
+  (function () {
+    var root = document.documentElement;
+    var light = "{{ '/assets/css/just-the-docs-default.css' | relative_url }}";
+    var dark = "{{ '/assets/css/just-the-docs-runner-dark.css' | relative_url }}";
+    function preferred() {
+      try {
+        var saved = localStorage.getItem("mlr-theme");
+        if (saved === "light" || saved === "dark") return saved;
+      } catch (e) {}
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    function apply(theme) {
+      var sheet = document.querySelector('link[rel="stylesheet"][href$="just-the-docs-default.css"], link[rel="stylesheet"][href$="just-the-docs-runner-dark.css"]');
+      if (sheet) sheet.setAttribute("href", theme === "dark" ? dark : light);
+      root.setAttribute("data-theme", theme);
+    }
+    apply(preferred());
+    window.mlrToggleTheme = function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      try { localStorage.setItem("mlr-theme", next); } catch (e) {}
+      apply(next);
+    };
+  })();
+</script>
